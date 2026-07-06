@@ -5,6 +5,7 @@
 
 const SHEET_ID = '1pol6seeM23mKN0MU2KuO9dvO-ZagkTPm2icyqJ5DaL8';
 const SHEET_NAME = 'การตอบกลับ';
+const FORM_URL = 'https://entclick88.github.io/inspire-space-survey/';
 
 const HEADERS = [
   'Timestamp',
@@ -37,10 +38,11 @@ function doGet(e) {
   if (e && e.parameter && e.parameter.action === 'check') {
     return jsonOut_(checkDevice(e.parameter.deviceId || '', e.parameter.fingerprint || ''));
   }
-  return HtmlService.createHtmlOutputFromFile('index')
-    .setTitle('แบบสำรวจความคิดเห็นต่อ (ร่าง) กฎการใช้ห้อง Inspire Space')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  // เปิดลิงก์ /exec ตรงๆ → พาไปหน้าแบบฟอร์มบน GitHub Pages
+  return HtmlService.createHtmlOutput(
+    '<meta http-equiv="refresh" content="0; url=' + FORM_URL + '">' +
+    '<p style="font-family:sans-serif">กำลังพาไปที่แบบฟอร์ม... หากไม่ไปอัตโนมัติ <a href="' + FORM_URL + '">คลิกที่นี่</a></p>'
+  );
 }
 
 // API สำหรับรับคำตอบจากหน้าเว็บที่โฮสต์ภายนอก (ส่ง JSON มาทาง POST)
@@ -70,6 +72,18 @@ function getSheet_() {
     sheet.setFrozenRows(1);
   }
   return sheet;
+}
+
+/** ลบแถวทดสอบ (Device ID ขึ้นต้นด้วย "test-") — รันเองจากตัวแก้ไข Apps Script */
+function clearTestRows() {
+  const sheet = getSheet_();
+  const lastRow = sheet.getLastRow();
+  for (let r = lastRow; r >= 2; r--) {
+    const deviceId = String(sheet.getRange(r, 2).getValue());
+    if (deviceId.indexOf('test-') === 0) {
+      sheet.deleteRow(r);
+    }
+  }
 }
 
 /** ตรวจว่าเครื่องนี้เคยส่งคำตอบแล้วหรือยัง (เช็คจาก Device ID หรือ Fingerprint) */
