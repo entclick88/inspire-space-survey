@@ -80,6 +80,7 @@
     }
     select:focus { outline: none; border-color: var(--purple); }
     select.answered { border-color: var(--purple); background: var(--purple-light); }
+    select.invalid { border-color: var(--red); background: #fce8e6; }
 
     .btn {
       background: var(--purple);
@@ -235,6 +236,7 @@
     document.querySelectorAll('select').forEach(function (sel) {
       sel.addEventListener('change', function () {
         sel.classList.toggle('answered', sel.value !== '');
+        if (sel.value !== '') sel.classList.remove('invalid');
       });
     });
 
@@ -329,6 +331,24 @@
       e.preventDefault();
       var btn = document.getElementById('submitBtn');
       var msg = document.getElementById('statusMsg');
+
+      // บังคับตอบให้ครบทุกข้อก่อนส่ง
+      var selects = this.querySelectorAll('select');
+      var firstEmpty = null, missing = 0;
+      selects.forEach(function (sel) {
+        if (!sel.value) {
+          sel.classList.add('invalid');
+          missing++;
+          if (!firstEmpty) firstEmpty = sel;
+        }
+      });
+      if (firstEmpty) {
+        msg.className = 'status error';
+        msg.textContent = 'กรุณาตอบให้ครบทุกข้อก่อนส่ง (ยังไม่ได้ตอบ ' + missing + ' ข้อ)';
+        firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        try { firstEmpty.focus(); } catch (e) {}
+        return;
+      }
 
       var answers = {};
       new FormData(this).forEach(function (value, key) {
