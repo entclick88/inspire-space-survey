@@ -31,8 +31,8 @@ const HEADERS = [
   '(สิ่งที่ไม่อยากเห็น) งดแสดงพฤติกรรมที่ไม่เหมาะสมระหว่างบุคคลภายในห้อง Inspire Space',
   '(สิ่งที่ไม่อยากเห็น) หลีกเลี่ยงการรับประทานอาหารภายในห้อง เพื่อคงบรรยากาศที่เหมาะสมสำหรับการเรียนรู้และการใช้งานร่วมกัน',
   '(สิ่งที่ไม่อยากเห็น) การใช้พื้นที่โดยไม่รับผิดชอบต่อขยะและความสะอาดของพื้นที่ส่วนรวม ส่งผลต่อบรรยากาศ',
-  'ท่านเห็นด้วยหรือไม่กับการจัดให้มีมุมบอร์ดเกมในห้อง Inspire Space เพื่อส่งเสริมการเรียนรู้ การคิดวิเคราะห์ และการทำกิจกรรมร่วมกัน',
-  'ท่านมีความคิดเห็นอย่างไรเกี่ยวกับพื้นห้อง Inspire Space ในอนาคต'
+  'นักเรียนเห็นด้วยหรือไม่กับการจัดให้มีมุมบอร์ดเกมในห้อง Inspire Space เพื่อส่งเสริมการเรียนรู้ การคิดวิเคราะห์ และการทำกิจกรรมร่วมกัน',
+  'นักเรียนมีความคิดเห็นอย่างไรเกี่ยวกับพื้นห้อง Inspire Space ในอนาคต'
 ];
 
 // ลำดับ field ที่รับจากหน้า HTML (ต้องตรงกับ name ใน index.html)
@@ -79,8 +79,8 @@ function getSheet_() {
     sheet.appendRow(HEADERS);
     sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold').setBackground('#673ab7').setFontColor('#ffffff');
     sheet.setFrozenRows(1);
-  } else if (String(sheet.getRange(1, HEADERS.length).getValue()) === '') {
-    // มีการเพิ่มคำถามใหม่ → เติมหัวคอลัมน์ให้ครบโดยไม่กระทบข้อมูลเดิม
+  } else if (String(sheet.getRange(1, HEADERS.length).getValue()) !== HEADERS[HEADERS.length - 1]) {
+    // มีการเพิ่ม/แก้ไขคำถาม → เขียนหัวคอลัมน์ใหม่ให้ตรง โดยไม่กระทบข้อมูลเดิม
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS])
       .setFontWeight('bold').setBackground('#673ab7').setFontColor('#ffffff');
   }
