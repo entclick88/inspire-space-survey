@@ -272,14 +272,47 @@
     var deviceId = getDeviceId();
     var fingerprint = getFingerprint();
 
+    // โหมดทดสอบ: เปิดเครื่องนี้ให้โหวตได้ไม่จำกัดด้วยลิงก์ ...?test=1 (ปิดด้วย ?test=0)
+    var TESTMODE_KEY = 'inspire_survey_testmode';
+    var _tp = new URLSearchParams(location.search).get('test');
+    if (_tp === '1') localStorage.setItem(TESTMODE_KEY, '1');
+    if (_tp === '0') localStorage.removeItem(TESTMODE_KEY);
+    var TEST_MODE = localStorage.getItem(TESTMODE_KEY) === '1';
+
+    function showTestBanner() {
+      if (document.getElementById('testBanner')) return;
+      var b = document.createElement('div');
+      b.id = 'testBanner';
+      b.style.cssText = 'position:sticky;top:0;z-index:50;background:#d93025;color:#fff;' +
+        'text-align:center;padding:8px 12px;font-size:14px;font-weight:600;';
+      b.innerHTML = '🧪 โหมดทดสอบ — เครื่องนี้ส่งได้ไม่จำกัด (คำตอบถูกทำเครื่องหมาย test-) ' +
+        '<a href="?test=0" style="color:#fff;text-decoration:underline">ออกจากโหมดทดสอบ</a>';
+      document.body.insertBefore(b, document.body.firstChild);
+    }
+
     function show(id) {
       ['loading', 'already', 'success', 'surveyForm'].forEach(function (x) {
         document.getElementById(x).classList.toggle('hidden', x !== id);
       });
     }
 
-    // ตอนโหลด: เช็คทั้ง localStorage และฐานข้อมูลฝั่งเซิร์ฟเวอร์
-    if (localStorage.getItem(STORAGE_KEY)) {
+    // ปุ่ม "ส่งอีกครั้ง" บนหน้าสำเร็จ (เฉพาะโหมดทดสอบ)
+    function showResubmit() {
+      if (document.getElementById('resubmitBtn')) return;
+      var btn = document.createElement('button');
+      btn.id = 'resubmitBtn';
+      btn.className = 'btn';
+      btn.style.marginTop = '16px';
+      btn.textContent = '🧪 ส่งอีกครั้ง (โหมดทดสอบ)';
+      btn.onclick = function () { location.reload(); };
+      document.getElementById('success').appendChild(btn);
+    }
+
+    // ตอนโหลด: โหมดทดสอบข้ามการเช็คทั้งหมด แสดงฟอร์มเสมอ
+    if (TEST_MODE) {
+      show('surveyForm');
+      showTestBanner();
+    } else if (localStorage.getItem(STORAGE_KEY)) {
       show('already');
     } else {
       fetch(SCRIPT_URL + '?action=check&deviceId=' + encodeURIComponent(deviceId) +
@@ -310,16 +343,22 @@
       msg.className = 'status';
       msg.textContent = 'กำลังบันทึกคำตอบ...';
 
+      // โหมดทดสอบ: ใช้ id สุ่มใหม่ทุกครั้ง (ขึ้นต้น test-) เพื่อไม่ให้ชนกับตัวกันซ้ำ
+      var rnd = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      var subDevice = TEST_MODE ? ('test-' + rnd) : deviceId;
+      var subFp = TEST_MODE ? ('test-' + rnd) : fingerprint;
+
       // ส่งผ่าน GET (ช่องทางที่เสถียร ไม่ติดปัญหา redirect ของ POST บน Apps Script)
       var payload = encodeURIComponent(JSON.stringify({
-        deviceId: deviceId, fingerprint: fingerprint, answers: answers
+        deviceId: subDevice, fingerprint: subFp, answers: answers
       }));
       fetch(SCRIPT_URL + '?action=submit&payload=' + payload)
         .then(function (r) { return r.json(); })
         .then(function (res) {
           if (res && res.ok) {
-            localStorage.setItem(STORAGE_KEY, '1');
+            if (!TEST_MODE) localStorage.setItem(STORAGE_KEY, '1');
             show('success');
+            if (TEST_MODE) showResubmit();
           } else if (res && res.duplicate) {
             localStorage.setItem(STORAGE_KEY, '1');
             show('already');
