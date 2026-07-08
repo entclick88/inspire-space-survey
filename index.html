@@ -310,11 +310,11 @@
       msg.className = 'status';
       msg.textContent = 'กำลังบันทึกคำตอบ...';
 
-      // ส่งเป็น text/plain เพื่อเลี่ยง CORS preflight (Apps Script ไม่รองรับ OPTIONS)
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ deviceId: deviceId, fingerprint: fingerprint, answers: answers })
-      })
+      // ส่งผ่าน GET (ช่องทางที่เสถียร ไม่ติดปัญหา redirect ของ POST บน Apps Script)
+      var payload = encodeURIComponent(JSON.stringify({
+        deviceId: deviceId, fingerprint: fingerprint, answers: answers
+      }));
+      fetch(SCRIPT_URL + '?action=submit&payload=' + payload)
         .then(function (r) { return r.json(); })
         .then(function (res) {
           if (res && res.ok) {

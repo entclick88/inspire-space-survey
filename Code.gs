@@ -47,6 +47,14 @@ function doGet(e) {
   if (e && e.parameter && e.parameter.action === 'check') {
     return jsonOut_(checkDevice(e.parameter.deviceId || '', e.parameter.fingerprint || ''));
   }
+  // บันทึกคำตอบผ่าน GET (เลี่ยงปัญหา redirect ของ POST) — ส่ง payload เป็น JSON ใน query
+  if (e && e.parameter && e.parameter.action === 'submit') {
+    try {
+      return jsonOut_(submitResponse(JSON.parse(e.parameter.payload)));
+    } catch (err) {
+      return jsonOut_({ ok: false, error: String(err) });
+    }
+  }
   // เปิดลิงก์ /exec ตรงๆ → พาไปหน้าแบบฟอร์มบน GitHub Pages
   return HtmlService.createHtmlOutput(
     '<meta http-equiv="refresh" content="0; url=' + FORM_URL + '">' +
